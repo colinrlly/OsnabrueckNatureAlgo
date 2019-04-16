@@ -15,6 +15,7 @@ public class KnapsackHillClimbing {
     // static int solutionSize = 13;
     // static int solutionDef[] = { 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2 };
 
+    final static String dataPath = "data/cable_12_100.csv";
     static int weights[];
     static int values[];
     static int limit;
@@ -54,7 +55,7 @@ public class KnapsackHillClimbing {
     }
 
     public static void main(String[] args) {
-        List<List<Integer>> records = parseCSV("cable_12_100.csv");
+        List<List<Integer>> records = parseCSV(dataPath);
 
         System.out.println(records);
         // int solution[] = { 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 };
