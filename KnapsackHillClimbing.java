@@ -9,20 +9,10 @@ import java.util.ArrayList;
 
 public class KnapsackHillClimbing {
 
-    // static int weights[] = { 15, 25, 40 };
-    // static int values[] = { 30, 40, 60 };
-    // static int limit = 100;
-    // static int solutionSize = 13;
-    // static int solutionDef[] = { 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2 };
-
     final static String dataPath = "data/cable_12_100.csv";
-    final static int limit = 100;
     static int solutionSize = 12;
-
-    // static int weights[];
-    // static int values[];
+    final static int limit = 100;
     static List<List<Integer>> data;
-    static int solutionDef[];
 
     /***
      * Prints the final values at the end of running this program.
@@ -34,7 +24,7 @@ public class KnapsackHillClimbing {
         int localBestWeight = 0;
 
         for (int i = 0; i < solution.length; i++) {
-            localBestWeight += solution[i] * data.get(i).get(1);
+            localBestWeight += solution[i] * data.get(i).get(0);
         }
 
         System.out.println("------------------");
@@ -83,11 +73,33 @@ public class KnapsackHillClimbing {
         }
     }
 
+    public static int getWeight(List<List<Integer>> data, int i) {
+        return data.get(i).get(0);
+    }
+
+    public static int getValue(List<List<Integer>> data, int i) {
+        return data.get(i).get(1);
+    }
+
+    public static int getNDataWeight(int[][] neighborhoodData, int i) {
+        return neighborhoodData[i][0];
+    }
+
+    public static int getNDataValue(int[][] neighborhoodData, int i) {
+        return neighborhoodData[i][1];
+    }
+    
+    public static int[] genSolution(int solutionSize) {
+        int[] solution = new int[solutionSize];
+        Arrays.fill(solution, 0);
+        return solution;
+    }
+
     public static void main(String[] args) {
         data = parseCSV(dataPath);
 
         // Initialize variables
-        int solution[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        int solution[] = genSolution(solutionSize);
         int neighborhood[][] = new int[solutionSize][solutionSize];
         int localBestValue = 0;
         int neighborWeight = 0;
@@ -97,7 +109,7 @@ public class KnapsackHillClimbing {
 
         // Get the initial "localBestValue" - the value of the initial solution
         for (int i = 0; i < solution.length; i++) {
-            localBestValue += solution[i] * data.get(i).get(0);
+            localBestValue += solution[i] * data.get(i).get(1);
         }
 
         while (!solutionIsBest) {
@@ -113,11 +125,11 @@ public class KnapsackHillClimbing {
                 neighborWeight = 0;
                 neighborValue = 0;
                 for (int j = 0; j < neighborhood[i].length; j++) {
-                    neighborWeight += neighborhood[i][j] * data.get(j).get(1);
-                    neighborValue += neighborhood[i][j] * data.get(j).get(0);
+                    neighborWeight += neighborhood[i][j] * getWeight(data, j);
+                    neighborValue += neighborhood[i][j] * getValue(data, j);
                 }
-                neighborhoodData[i][0] = neighborValue;
-                neighborhoodData[i][1] = neighborWeight;
+                neighborhoodData[i][0] = neighborWeight;
+                neighborhoodData[i][1] = neighborValue;
             }
 
             printNeighborhood(neighborhood, neighborhoodData);
@@ -125,11 +137,20 @@ public class KnapsackHillClimbing {
             // See if any of the neighbors are better than the current solution.
             solutionIsBest = true;
             for (int i = 0; i < solution.length; i++) {
-                if (neighborhoodData[i][1] <= limit && neighborhoodData[i][0] > localBestValue) {
+                // System.out.println("checking for new best solution");
+                if (getNDataWeight(neighborhoodData, i) <= limit && getNDataValue(neighborhoodData, i) > localBestValue) {
                     solution = neighborhood[i].clone();
-                    localBestValue = neighborhoodData[i][0];
+                    // System.out.println("new best solution is " + Arrays.toString(solution));
+                    localBestValue = neighborhoodData[i][1];
                     solutionIsBest = false;
-                }
+                } 
+                // else if (getNDataWeight(neighborhoodData, i) > limit) {
+                //     System.out.println("Solution has greater weight than limit");
+                // } else if (getNDataValue(neighborhoodData, i) < localBestValue) {
+                //     System.out.println("Solution does not have greater value");
+                // } else {
+                //     System.out.println("Something is wrong");
+                // }
             }
         }
 
