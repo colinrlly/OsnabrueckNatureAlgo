@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.HashMap;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -9,9 +10,9 @@ import java.util.ArrayList;
 
 public class KnapsackHillClimbing {
 
-    final static String dataPath = "data/cable_12_100.csv";
-    static int solutionSize = 12;
-    final static int limit = 100;
+    final static String dataPath = "data/larger_100_1000.csv";
+    static int solutionSize = 100;
+    final static int limit = 1000;
     static List<List<Integer>> data;
 
     /***
@@ -88,11 +89,40 @@ public class KnapsackHillClimbing {
     public static int getNDataValue(int[][] neighborhoodData, int i) {
         return neighborhoodData[i][1];
     }
-    
+
     public static int[] genSolution(int solutionSize) {
         int[] solution = new int[solutionSize];
         Arrays.fill(solution, 0);
         return solution;
+    }
+
+    public static HashMap<String, int[][]> genSmallNeighborhood(int[] solution) {
+        HashMap<String, int[][]> smallNeighborhood = new HashMap<String, int[][]>();
+        int neighborWeight = 0;
+        int neighborValue = 0;
+        int neighborhood[][] = new int[solutionSize][solutionSize];
+        int neighborhoodData[][] = new int[solutionSize][2]; // [2] is [value, weight]
+
+        for (int i = 0; i < solution.length; i++) {
+            // Flip 1 bit for every solution in the neighborhood.
+            neighborhood[i] = solution.clone();
+            neighborhood[i][i] = neighborhood[i][i] == 1 ? 0 : 1;
+
+            // Get the value and weight of all the neighbors.
+            neighborWeight = 0;
+            neighborValue = 0;
+            for (int j = 0; j < neighborhood[i].length; j++) {
+                neighborWeight += neighborhood[i][j] * getWeight(data, j);
+                neighborValue += neighborhood[i][j] * getValue(data, j);
+            }
+            neighborhoodData[i][0] = neighborWeight;
+            neighborhoodData[i][1] = neighborValue;
+        }
+
+        smallNeighborhood.put("neighborhoodData", neighborhoodData);
+        smallNeighborhood.put("neighborhood", neighborhood);
+
+        return smallNeighborhood;
     }
 
     public static void main(String[] args) {
@@ -102,54 +132,41 @@ public class KnapsackHillClimbing {
         int solution[] = genSolution(solutionSize);
         int neighborhood[][] = new int[solutionSize][solutionSize];
         int localBestValue = 0;
-        int neighborWeight = 0;
-        int neighborValue = 0;
         int neighborhoodData[][] = new int[solutionSize][2]; // [2] is [value, weight]
         boolean solutionIsBest = false;
 
         // Get the initial "localBestValue" - the value of the initial solution
-        for (int i = 0; i < solution.length; i++) {
-            localBestValue += solution[i] * data.get(i).get(1);
-        }
+        // for (int i = 0; i < solution.length; i++) {
+        // localBestValue += solution[i] * data.get(i).get(1);
+        // }
 
         while (!solutionIsBest) {
-            System.out.println(Arrays.toString(solution) + " solution was not best");
+            // System.out.println(Arrays.toString(solution) + " solution was not best");
 
-            // Loop through all neighbors.
-            for (int i = 0; i < solution.length; i++) {
-                // Flip 1 bit for every solution in the neighborhood.
-                neighborhood[i] = solution.clone();
-                neighborhood[i][i] = neighborhood[i][i] == 1 ? 0 : 1;
+            // Generate the small neighborhood
+            HashMap<String, int[][]> smallNeighborhood = genSmallNeighborhood(solution);
+            neighborhood = smallNeighborhood.get("neighborhood");
+            neighborhoodData = smallNeighborhood.get("neighborhoodData");
 
-                // Get the value and weight of all the neighbors.
-                neighborWeight = 0;
-                neighborValue = 0;
-                for (int j = 0; j < neighborhood[i].length; j++) {
-                    neighborWeight += neighborhood[i][j] * getWeight(data, j);
-                    neighborValue += neighborhood[i][j] * getValue(data, j);
-                }
-                neighborhoodData[i][0] = neighborWeight;
-                neighborhoodData[i][1] = neighborValue;
-            }
-
-            printNeighborhood(neighborhood, neighborhoodData);
+            // printNeighborhood(neighborhood, neighborhoodData);
 
             // See if any of the neighbors are better than the current solution.
             solutionIsBest = true;
             for (int i = 0; i < solution.length; i++) {
                 // System.out.println("checking for new best solution");
-                if (getNDataWeight(neighborhoodData, i) <= limit && getNDataValue(neighborhoodData, i) > localBestValue) {
+                if (getNDataWeight(neighborhoodData, i) <= limit
+                        && getNDataValue(neighborhoodData, i) > localBestValue) {
                     solution = neighborhood[i].clone();
                     // System.out.println("new best solution is " + Arrays.toString(solution));
                     localBestValue = neighborhoodData[i][1];
                     solutionIsBest = false;
-                } 
+                }
                 // else if (getNDataWeight(neighborhoodData, i) > limit) {
-                //     System.out.println("Solution has greater weight than limit");
+                // System.out.println("Solution has greater weight than limit");
                 // } else if (getNDataValue(neighborhoodData, i) < localBestValue) {
-                //     System.out.println("Solution does not have greater value");
+                // System.out.println("Solution does not have greater value");
                 // } else {
-                //     System.out.println("Something is wrong");
+                // System.out.println("Something is wrong");
                 // }
             }
         }
