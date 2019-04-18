@@ -7,12 +7,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class KnapsackHillClimbing {
 
-    final static String dataPath = "data/larger_100_1000.csv";
-    static int solutionSize = 100;
-    final static int limit = 1000;
+    final static String dataPath = "data/cable_12_100.csv";
+    static int solutionSize = 12;
+    final static int limit = 100;
     static List<List<Integer>> data;
 
     /***
@@ -90,7 +91,7 @@ public class KnapsackHillClimbing {
         return neighborhoodData[i][1];
     }
 
-    public static int[] genSolution(int solutionSize) {
+    public static int[] genInitSolution(int solutionSize) {
         int[] solution = new int[solutionSize];
         Arrays.fill(solution, 0);
         return solution;
@@ -125,50 +126,51 @@ public class KnapsackHillClimbing {
         return smallNeighborhood;
     }
 
+    public static int[] checkForBetterSolution(int[][] neighborhoodData, int localBestValue, int[][] neighborhood) {
+        int[] newSolution = null;
+
+        for (int i = 0; i < solutionSize; i++) {
+            if (getNDataWeight(neighborhoodData, i) <= limit && getNDataValue(neighborhoodData, i) > localBestValue) {
+                newSolution = neighborhood[i].clone();
+                localBestValue = neighborhoodData[i][1];
+            }
+        }
+
+        return newSolution;
+    }
+
+    public static int getSolutionValue(int[] solution) {
+        int value = 0;
+
+        System.out.println(Arrays.toString(solution));
+        for (int i = 0; i < solutionSize; i++) {
+            value += solution[i] * data.get(i).get(1);
+        }
+
+        return value;
+    }
+
     public static void main(String[] args) {
         data = parseCSV(dataPath);
 
         // Initialize variables
-        int solution[] = genSolution(solutionSize);
+        int solution[] = {}; // Make sure solution != newSolution
+        int[] newSolution = genInitSolution(solutionSize);
         int neighborhood[][] = new int[solutionSize][solutionSize];
         int localBestValue = 0;
         int neighborhoodData[][] = new int[solutionSize][2]; // [2] is [value, weight]
-        boolean solutionIsBest = false;
+        HashMap<String, int[][]> smallNeighborhood;
 
-        // Get the initial "localBestValue" - the value of the initial solution
-        // for (int i = 0; i < solution.length; i++) {
-        // localBestValue += solution[i] * data.get(i).get(1);
-        // }
-
-        while (!solutionIsBest) {
-            // System.out.println(Arrays.toString(solution) + " solution was not best");
+        while (newSolution != null) {
+            solution = newSolution;
+            localBestValue = getSolutionValue(solution);
 
             // Generate the small neighborhood
-            HashMap<String, int[][]> smallNeighborhood = genSmallNeighborhood(solution);
+            smallNeighborhood = genSmallNeighborhood(solution);
             neighborhood = smallNeighborhood.get("neighborhood");
             neighborhoodData = smallNeighborhood.get("neighborhoodData");
 
-            // printNeighborhood(neighborhood, neighborhoodData);
-
-            // See if any of the neighbors are better than the current solution.
-            solutionIsBest = true;
-            for (int i = 0; i < solution.length; i++) {
-                // System.out.println("checking for new best solution");
-                if (getNDataWeight(neighborhoodData, i) <= limit
-                        && getNDataValue(neighborhoodData, i) > localBestValue) {
-                    solution = neighborhood[i].clone();
-                    // System.out.println("new best solution is " + Arrays.toString(solution));
-                    localBestValue = neighborhoodData[i][1];
-                    solutionIsBest = false;
-                }
-                // else if (getNDataWeight(neighborhoodData, i) > limit) {
-                // System.out.println("Solution has greater weight than limit");
-                // } else if (getNDataValue(neighborhoodData, i) < localBestValue) {
-                // System.out.println("Solution does not have greater value");
-                // } else {
-                // System.out.println("Something is wrong");
-                // }
-            }
+            newSolution = checkForBetterSolution(neighborhoodData, localBestValue, neighborhood);
         }
 
         finalPrint(solution, localBestValue, data);
